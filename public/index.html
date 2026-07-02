@@ -4,56 +4,133 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#ff6b9d">
-<title>🌸 菲菲打卡日记</title>
+<title>菲菲打卡日记</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<!-- USER VIEW -->
-<div id="userView" class="app">
-  <div id="adminBadge" class="admin-badge" style="display:none">管理员模式 · <button id="switchToAdmin">📊 管理面板</button></div>
-  <header class="header">
-    <div class="header-top"><h1>🌸 菲菲打卡日记</h1><div class="streak-chip">🔥 <span id="streakNum">0</span>天</div></div>
-    <div class="stats-row">
-      <div class="stat-item"><span class="stat-val" id="totalCount">0</span><span class="stat-lbl">总打卡</span></div>
-      <div class="stat-item"><span class="stat-val"><span id="monthDone">0</span>/<span id="monthTotal">30</span></span><span class="stat-lbl">本月</span></div>
-      <div class="stat-item"><span class="stat-val" id="streakCount">0</span><span class="stat-lbl">连续🔥</span></div>
-    </div>
-  </header>
-  <section class="calendar-section">
-    <div class="calendar-nav"><button id="prevMonth">◀</button><h2 id="currentMonthLabel">7月</h2><button id="nextMonth">▶</button></div>
-    <div class="calendar-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
-    <div id="calendarGrid" class="calendar-grid"></div>
-  </section>
-  <section class="gallery-section"><h3>📸 打卡日记</h3><div id="galleryGrid" class="gallery-grid"></div></section>
-  <div style="height:300px"></div>
-  <div class="checkin-panel" id="checkinPanel">
-    <div class="panel-date-bar"><h4 id="checkinDate">今天</h4><span id="checkinStatusDot" class="status-dot unchecked"></span></div>
-    <div id="checkedState" class="checked-state" style="display:none">
-      <div class="checked-preview"><img id="checkedImage" alt="" style="display:none" onclick="window._showLightbox&&window._showLightbox(this.src)"><div class="checked-info"><span class="checked-emoji">✅ 已打卡</span><span id="checkedNote" class="checked-note-text"></span></div></div>
-      <div class="panel-actions"><button id="editBtn" class="btn-outline">✏️ 修改</button><button id="deleteBtn2" class="btn-outline btn-outline-danger">🗑️</button></div>
-    </div>
-    <div id="uncheckedState">
-      <div class="mood-picker"><label>今天的心情</label><div class="mood-options"><button class="mood-btn" data-mood="😊">😊</button><button class="mood-btn" data-mood="😴">😴</button><button class="mood-btn" data-mood="💪">💪</button><button class="mood-btn" data-mood="😢">😢</button><button class="mood-btn" data-mood="🤩">🤩</button><button class="mood-btn" data-mood="😤">😤</button></div></div>
-      <div class="form-group"><input type="text" id="noteInput" placeholder="写一句今天的日记…" maxlength="140" autocomplete="off"></div>
-      <div class="form-group"><div class="upload-area" id="uploadArea"><input type="file" id="imageInput" accept="image/*" capture="environment" hidden><div id="uploadEmpty"><span>📷 拍照 / 上传图片</span></div><div id="uploadFilled" style="display:none"><img id="previewThumb" src="" alt=""><button id="removeImage" class="thumb-remove">✕</button></div></div></div>
-      <button id="checkinBtn" class="btn-primary">✅ 打卡签到</button>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-top">
+        <h1>🌸 菲菲打卡日记</h1>
+        <div class="streak-chip" id="streakChip">
+          🔥 <span id="streakNum">0</span>天
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="stat-val" id="totalCount">0</span>
+          <span class="stat-lbl">总打卡</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val"><span id="monthDone">0</span>/<span id="monthTotal">30</span></span>
+          <span class="stat-lbl">本月</span>
+        </div>
+        <div class="stat-item" id="streakHighlight">
+          <span class="stat-val" id="streakCount">0</span>
+          <span class="stat-lbl">连续🔥</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Calendar -->
+    <section class="calendar-section">
+      <div class="calendar-nav">
+        <button id="prevMonth">◀</button>
+        <h2 id="currentMonthLabel">2026年7月</h2>
+        <button id="nextMonth">▶</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </section>
+
+    <!-- Gallery -->
+    <section class="gallery-section">
+      <h3>📸 打卡日记</h3>
+      <div id="galleryGrid" class="gallery-grid"></div>
+    </section>
+
+    <!-- Spacer for bottom panel -->
+    <div style="height: 300px"></div>
+
+    <!-- Mobile Check-in Panel (fixed bottom) -->
+    <div class="checkin-panel" id="checkinPanel">
+      <!-- Selected date bar -->
+      <div class="panel-date-bar">
+        <h4 id="checkinDate">今天 · 7月2日</h4>
+        <span id="checkinStatusDot" class="status-dot unchecked"></span>
+      </div>
+
+      <!-- Checked state - show preview -->
+      <div id="checkedState" class="checked-state" style="display:none">
+        <div class="checked-preview" id="checkedPreview">
+          <img id="checkedImage" alt="" style="display:none" onclick="this.src && showLightbox(this.src)">
+          <div class="checked-info">
+            <span class="checked-emoji">✅ 已打卡</span>
+            <span id="checkedNote" class="checked-note-text"></span>
+          </div>
+        </div>
+        <div class="panel-actions">
+          <button id="editBtn" class="btn-outline">✏️ 修改</button>
+          <button id="deleteBtn2" class="btn-outline btn-outline-danger">🗑️</button>
+        </div>
+      </div>
+
+      <!-- Unchecked state - check-in form -->
+      <div id="uncheckedState">
+        <!-- Mood Picker -->
+        <div class="mood-picker" id="moodPicker">
+          <label>今天的心情</label>
+          <div class="mood-options">
+            <button class="mood-btn" data-mood="😊" data-label="开心">😊</button>
+            <button class="mood-btn" data-mood="😴" data-label="疲惫">😴</button>
+            <button class="mood-btn" data-mood="💪" data-label="努力">💪</button>
+            <button class="mood-btn" data-mood="😢" data-label="难过">😢</button>
+            <button class="mood-btn" data-mood="🤩" data-label="超棒">🤩</button>
+            <button class="mood-btn" data-mood="😤" data-label="烦躁">😤</button>
+          </div>
+        </div>
+
+        <!-- Note -->
+        <div class="form-group">
+          <input type="text" id="noteInput" placeholder="写一句今天的日记…" maxlength="140" autocomplete="off">
+        </div>
+
+        <!-- Photo -->
+        <div class="form-group">
+          <div class="upload-area" id="uploadArea">
+            <input type="file" id="imageInput" accept="image/*" capture="environment" hidden>
+            <div id="uploadEmpty">
+              <span>📷 拍照 / 上传图片</span>
+            </div>
+            <div id="uploadFilled" style="display:none">
+              <img id="previewThumb" src="" alt="">
+              <button id="removeImage" class="thumb-remove">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="checkinBtn" class="btn-primary">✅ 打卡签到</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ADMIN -->
-<div id="adminView" class="admin-view" style="display:none">
-  <div class="admin-header"><button id="backToUser" class="back-btn">← 返回打卡</button><h2>📊 管理后台</h2><button id="logoutAdmin" class="logout-btn">退出</button></div>
-  <div class="admin-stats"><div class="admin-stat-card"><span class="asc-icon">📅</span><span class="asc-val" id="adminTotal">0</span><span class="asc-lbl">总打卡</span></div><div class="admin-stat-card"><span class="asc-icon">🔥</span><span class="asc-val" id="adminStreak">0</span><span class="asc-lbl">连续天数</span></div><div class="admin-stat-card"><span class="asc-icon">📸</span><span class="asc-val" id="adminImages">0</span><span class="asc-lbl">含图片</span></div><div class="admin-stat-card"><span class="asc-icon">🗓️</span><span class="asc-val" id="adminMonth">0</span><span class="asc-lbl">本月</span></div></div>
-  <div class="admin-list-header"><h3>所有打卡记录</h3><span class="admin-count" id="adminListCount">0条</span></div>
-  <div id="adminList" class="admin-list"></div>
-</div>
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
 
-<div id="toast" class="toast"></div>
-<div id="lightbox" class="lightbox"><img id="lightboxImg"><span class="lb-close" id="lbClose">✕</span></div>
-<canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <img id="lightboxImg">
+    <span class="lb-close" id="lbClose">✕</span>
+  </div>
+
+  <!-- Confetti -->
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
 <script src="/script.js"></script>
-
 </body>
 </html>

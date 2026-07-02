@@ -55,9 +55,8 @@ function spawnParticles(){
 }
 spawnParticles();
 
-// Focus the hidden input when clicking anywhere on login
-loginView.addEventListener('click',()=>passInput.focus());
-passInput.focus();
+// Auto-focus on load
+setTimeout(()=>passInput.focus(),500);
 
 // Update dots as user types
 passInput.addEventListener('input',()=>{
@@ -76,9 +75,9 @@ passInput.addEventListener('keydown',e=>{
   if(e.key==='Enter') tryLogin();
 });
 
-// Global click to focus
-document.addEventListener('click',(e)=>{
-  if(loginView.style.display!=='none'&&!loginLocked) passInput.focus();
+// Re-focus on any touch/click
+loginView.addEventListener('click',(e)=>{
+  if(!loginLocked&&document.activeElement!==passInput) passInput.focus();
 });
 
 function tryLogin(){

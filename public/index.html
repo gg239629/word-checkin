@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 背单词打卡</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>📚 背单词打卡</h1>
+      <p class="header-subtitle">坚持每一天，词汇量爆增！</p>
+      <div class="stats">
+        <div class="stat-card">
+          <span class="stat-icon">🔥</span>
+          <span class="stat-num" id="streakCount">0</span>
+          <span class="stat-label">连续打卡</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">📅</span>
+          <span class="stat-num" id="totalCount">0</span>
+          <span class="stat-label">总打卡</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">📖</span>
+          <span class="stat-num" id="totalWords">0</span>
+          <span class="stat-label">累计单词</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">📊</span>
+          <span class="stat-num" id="monthCount">0/<span id="monthTotal">30</span></span>
+          <span class="stat-label">本月</span>
+        </div>
+      </div>
+      <!-- Streak Badge -->
+      <div id="streakBadge" class="streak-badge hidden">
+        <span class="badge-emoji">🔥</span>
+        <span id="streakBadgeText"></span>
+      </div>
+    </header>
+
+    <!-- Monthly Progress -->
+    <div class="progress-section">
+      <div class="progress-info">
+        <span>本月进度</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <section class="calendar-section">
+      <div class="calendar-nav">
+        <button id="prevMonth" class="nav-btn">‹</button>
+        <h2 id="currentMonthLabel">2026年7月</h2>
+        <button id="nextMonth" class="nav-btn">›</button>
+        <button id="goToday" class="nav-btn today-btn">今天</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </section>
+
+    <!-- Check-in Panel -->
+    <section class="checkin-section" id="checkinPanel">
+      <h3 id="checkinDate">今天 2026-07-02</h3>
+      <div id="checkinPreview" class="checkin-preview">
+        <div id="existingImage" class="existing-image" style="display:none">
+          <img id="existingImagePreview" alt="">
+          <button id="existingImageRemove" class="icon-btn">🗑️</button>
+        </div>
+        <div id="checkedBadge" class="checked-badge" style="display:none">
+          ✅ 已打卡
+        </div>
+        <div id="notCheckedBadge" class="not-checked-badge">
+          ⭕ 尚未打卡
+        </div>
+      </div>
+      <div class="form-group">
+        <label>📝 今天背了在几个单词？</label>
+        <input type="number" id="wordCount" placeholder="输入背诵数量（可选）" min="0" max="9999">
+      </div>
+      <div class="form-group">
+        <label>💬 备注（可选）</label>
+        <input type="text" id="noteInput" placeholder="今天背了什么单词？" maxlength="200" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>📸 上传截图证明</label>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="imageInput" accept="image/*" hidden>
+          <div class="upload-placeholder" id="uploadPlaceholder">
+            <span class="upload-icon">📷</span>
+            <span>点击上传截图</span>
+            <span class="upload-hint">JPG/PNG/GIF · 自动压缩 · 最大10MB</span>
+          </div>
+          <div class="upload-preview" id="uploadPreview" style="display:none">
+            <img id="previewImage" alt="预览">
+            <button id="removeImage" class="remove-btn">✕</button>
+          </div>
+        </div>
+      </div>
+      <button id="checkinBtn" class="btn-primary">✅ 打卡</button>
+      <button id="deleteBtn" class="btn-danger" style="display:none">🗑️ 删除此日打卡</button>
+    </section>
+
+    <!-- Image Gallery -->
+    <section class="gallery-section">
+      <h3>📸 打卡截图</h3>
+      <div id="galleryGrid" class="gallery-grid"></div>
+    </section>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <!-- Keyboard hint -->
+  <div class="kbd-hint">💡 提示: 按 <kbd>Enter</kbd> 快速打卡</div>
+
+<script src="/script.js"></script>
+</body>
+</html>

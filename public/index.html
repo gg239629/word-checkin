@@ -9,28 +9,8 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-
-<!-- LOGIN -->
-<div id="loginView" class="login-view">
-  <div class="particles" id="particles"></div>
-  <div class="login-card" id="loginCard">
-    <div class="login-avatar"><div class="avatar-circle"><span>🌸</span></div></div>
-    <h1 class="login-title">菲菲打卡日记</h1>
-    <p class="login-subtitle">输入魔法钥匙 ✨</p>
-    <div class="pass-dots" id="passDots">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      <div class="dot"></div>
-    </div>
-    <input type="password" id="passInput" class="pass-input" maxlength="8" placeholder="点击输入魔法钥匙…" autocomplete="off">
-    <div class="login-error" id="loginError"></div>
-    <button id="loginBtn" class="btn-login">🔑 进入</button>
-  </div>
-  <div class="login-footer">仅授权用户可访问</div>
-</div>
-
 <!-- USER VIEW -->
-<div id="userView" class="app" style="display:none">
+<div id="userView" class="app">
   <div id="adminBadge" class="admin-badge" style="display:none">管理员模式 · <button id="switchToAdmin">📊 管理面板</button></div>
   <header class="header">
     <div class="header-top"><h1>🌸 菲菲打卡日记</h1><div class="streak-chip">🔥 <span id="streakNum">0</span>天</div></div>
@@ -74,5 +54,6 @@
 <div id="lightbox" class="lightbox"><img id="lightboxImg"><span class="lb-close" id="lbClose">✕</span></div>
 <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
 <script src="/script.js"></script>
+
 </body>
 </html>

@@ -1,7 +1,7 @@
 // 菲菲打卡日记
 var $=function(id){return document.getElementById(id)};
 
-var curY,curM,selDate,selMood,curImg,editMode,checks={},allCs=[],role=null;
+var curY,curM,selDate,selMood,curImg,editMode,checks={},allCs=[],role='user';
 function fd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function td(s){return new Date(s+'T00:00:00')}
 function md(d){return (d.getMonth()+1)+'月'+d.getDate()+'日'}
@@ -10,53 +10,6 @@ function wd(d){return ['周日','周一','周二','周三','周四','周五','�
 
 function toast(msg,t){var e=$('toast');e.textContent=msg;e.className='toast show '+(t||'success');setTimeout(function(){if(e.classList.contains('show'))e.className='toast'},1800)}
 async function api(m,u,b){var o={method:m,headers:{'Content-Type':'application/json'}};if(b)o.body=JSON.stringify(b);return(await fetch(u,o)).json()}
-
-// ===== LOGIN =====
-var PASSWORDS={loveguan:'admin',lovefei:'user'};
-var pi=$('passInput'),pd=$('passDots'),lb=$('loginBtn'),le=$('loginError'),lc=$('loginCard'),lv=$('loginView'),ll=false;
-
-// Particles
-(function(){var c=$('particles'),ems=['🌸','💕','✨','🦋','💖','🌷','🎀','💫','🌟','🍬'];for(var i=0;i<18;i++){var e=document.createElement('div');e.className='particle';e.textContent=ems[Math.floor(Math.random()*ems.length)];e.style.left=(5+Math.random()*90)+'%';e.style.animationDuration=(6+Math.random()*10)+'s';e.style.animationDelay=Math.random()*8+'s';e.style.fontSize=(16+Math.random()*18)+'px';c.appendChild(e)}})();
-
-setTimeout(function(){try{pi.focus()}catch(e){}},300);
-
-// Dots update
-pi.addEventListener('input',function(){var v=pi.value,ds=pd.querySelectorAll('.dot');for(var i=0;i<ds.length;i++){ds[i].classList.toggle('filled',i<v.length);ds[i].classList.remove('wrong')}le.textContent='';le.style.color=''});
-
-// Enter key
-pi.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();tryLogin()}});
-
-// Button click - USE onclick in HTML instead, more reliable
-lb.onclick=function(e){e.preventDefault();tryLogin();return false};
-
-function tryLogin(){
-  if(ll)return;
-  var v=pi.value.toLowerCase().trim();
-  if(!v){le.textContent='请输入密码';return}
-  if(PASSWORDS[v]==='admin'){role='admin';loginOk()}
-  else if(PASSWORDS[v]==='user'){role='user';loginOk()}
-  else loginBad();
-}
-
-function loginBad(){
-  ll=true;var ds=pd.querySelectorAll('.dot');
-  for(var i=0;i<ds.length;i++)ds[i].classList.add('wrong');
-  lc.classList.add('shake');le.textContent='🔒 魔法钥匙不正确，请重试';
-  setTimeout(function(){pi.value='';for(var i=0;i<ds.length;i++){ds[i].classList.remove('filled','wrong')}lc.classList.remove('shake');le.textContent='';ll=false;try{pi.focus()}catch(e){}},800);
-}
-
-function loginOk(){
-  ll=true;var ds=pd.querySelectorAll('.dot');
-  for(var i=0;i<ds.length;i++){ds[i].classList.add('filled');ds[i].style.background='var(--green)'}
-  le.textContent=role==='admin'?'✨ 管理员，欢迎回来！':'💖 菲菲，今天也要开心哦！';
-  le.style.color='var(--green)';sessionStorage.setItem('ff_role',role);
-  setTimeout(function(){lv.classList.add('leaving');setTimeout(function(){lv.style.display='none';if(role==='admin')$('adminBadge').style.display='flex';$('userView').style.display='block';loadChecks(curY,curM);loadStats();sel(selDate);if(role==='admin')loadAdm()},400)},600);
-}
-
-function doLogout(){sessionStorage.removeItem('ff_role');location.reload()}
-
-// Check session
-(function(){var r=sessionStorage.getItem('ff_role');if(r==='admin'||r==='user'){role=r;lv.style.display='none';if(r==='admin')$('adminBadge').style.display='flex';$('userView').style.display='block';loadChecks(curY,curM);loadStats();sel(fd(new Date()));if(r==='admin')loadAdm()}})();
 
 // ===== USER VIEW =====
 async function loadChecks(y,m){try{var d=await api('GET','/api/checkins?year='+y+'&month='+m);checks={};d.forEach(function(c){checks[c.date]=c});renderCal();renderGal()}catch(e){}}

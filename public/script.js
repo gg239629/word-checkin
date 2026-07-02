@@ -35,17 +35,16 @@ passInput.addEventListener('input',function(){
 passInput.addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin()});
 
 // Login button
-loginBtn.addEventListener('click',tryLogin);
+loginBtn.addEventListener('click',function(e){e.preventDefault();console.log('BTN CLICKED');tryLogin();});
 
-// Click card to refocus
-loginCard.addEventListener('click',function(){
-  if(!loginLocked&&document.activeElement!==passInput)passInput.focus();
-});
 
 function tryLogin(){
+  console.log('TRYLOGIN lock='+loginLocked+' val='+passInput.value);
   if(loginLocked)return;
   var v=passInput.value.toLowerCase().trim();
-  if(!v)return;
+  console.log('TRYLOGIN trim='+v);
+  if(!v){console.log('TRYLOGIN empty');return;}
+  console.log('TRYLOGIN pw='+v+' match='+PASSWORDS[v]);
   if(PASSWORDS[v]==='admin'){userRole='admin';loginSuccess()}
   else if(PASSWORDS[v]==='user'){userRole='user';loginSuccess()}
   else loginFail();

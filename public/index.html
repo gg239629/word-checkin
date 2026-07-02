@@ -17,7 +17,12 @@
     <div class="login-avatar"><div class="avatar-circle"><span>🌸</span></div></div>
     <h1 class="login-title">菲菲打卡日记</h1>
     <p class="login-subtitle">输入魔法钥匙 ✨</p>
-    <input type="password" id="passInput" class="pass-input" maxlength="8" placeholder="输入魔法钥匙…" autocomplete="off">
+    <div class="pass-dots" id="passDots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <input type="password" id="passInput" class="pass-input" maxlength="8" placeholder="点击输入魔法钥匙…" autocomplete="off">
     <div class="login-error" id="loginError"></div>
     <button id="loginBtn" class="btn-login">🔑 进入</button>
   </div>
@@ -36,9 +41,7 @@
     </div>
   </header>
   <section class="calendar-section">
-    <div class="calendar-nav">
-      <button id="prevMonth">◀</button><h2 id="currentMonthLabel">2026年7月</h2><button id="nextMonth">▶</button>
-    </div>
+    <div class="calendar-nav"><button id="prevMonth">◀</button><h2 id="currentMonthLabel">7月</h2><button id="nextMonth">▶</button></div>
     <div class="calendar-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
     <div id="calendarGrid" class="calendar-grid"></div>
   </section>
@@ -59,7 +62,7 @@
   </div>
 </div>
 
-<!-- ADMIN VIEW -->
+<!-- ADMIN -->
 <div id="adminView" class="admin-view" style="display:none">
   <div class="admin-header"><button id="backToUser" class="back-btn">← 返回打卡</button><h2>📊 管理后台</h2><button id="logoutAdmin" class="logout-btn">退出</button></div>
   <div class="admin-stats"><div class="admin-stat-card"><span class="asc-icon">📅</span><span class="asc-val" id="adminTotal">0</span><span class="asc-lbl">总打卡</span></div><div class="admin-stat-card"><span class="asc-icon">🔥</span><span class="asc-val" id="adminStreak">0</span><span class="asc-lbl">连续天数</span></div><div class="admin-stat-card"><span class="asc-icon">📸</span><span class="asc-val" id="adminImages">0</span><span class="asc-lbl">含图片</span></div><div class="admin-stat-card"><span class="asc-icon">🗓️</span><span class="asc-val" id="adminMonth">0</span><span class="asc-lbl">本月</span></div></div>

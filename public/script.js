@@ -1,514 +1,344 @@
 // ============================================================
-//  背单词打卡 - 前端逻辑
+//  菲菲打卡日记 · 手机端逻辑
 // ============================================================
 
 // ===== State =====
-let currentYear = new Date().getFullYear();
-let currentMonth = new Date().getMonth() + 1;
-let selectedDate = formatDate(new Date());
+let currentYear, currentMonth, selectedDate, selectedMood, currentImageUrl, isEditMode;
 let checkins = {};
-let currentImageDataUrl = null;
-let isLoading = false;
-
-// ===== DOM Refs =====
-const $ = id => document.getElementById(id);
-const calendarGrid = $('calendarGrid');
-const monthLabel = $('currentMonthLabel');
-const streakCount = $('streakCount');
-const totalCount = $('totalCount');
-const totalWords = $('totalWords');
-const monthCount = $('monthCount');
-const monthTotalEl = $('monthTotal');
-const progressFill = $('progressFill');
-const progressPercent = $('progressPercent');
-const streakBadge = $('streakBadge');
-const streakBadgeText = $('streakBadgeText');
-const checkinDateEl = $('checkinDate');
-const checkedBadge = $('checkedBadge');
-const notCheckedBadge = $('notCheckedBadge');
-const existingImage = $('existingImage');
-const existingImagePreview = $('existingImagePreview');
-const existingImageRemove = $('existingImageRemove');
-const wordCount = $('wordCount');
-const noteInput = $('noteInput');
-const imageInput = $('imageInput');
-const uploadArea = $('uploadArea');
-const uploadPlaceholder = $('uploadPlaceholder');
-const uploadPreview = $('uploadPreview');
-const previewImage = $('previewImage');
-const removeImageBtn = $('removeImage');
-const checkinBtn = $('checkinBtn');
-const deleteBtn = $('deleteBtn');
-const galleryGrid = $('galleryGrid');
-const toast = $('toast');
-const loadingOverlay = $('loadingOverlay');
-const confettiCanvas = $('confettiCanvas');
-const ctx = confettiCanvas.getContext('2d');
 
 // ===== Helpers =====
-function formatDate(d) {
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function fmtDate(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function toDate(s) { return new Date(s + 'T00:00:00'); }
+function md(d) { return d.getMonth()+1 + '月' + d.getDate() + '日'; }
+function wd(d) {
+  return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
 }
 
-function showLoading() { loadingOverlay.classList.add('show'); isLoading = true; }
-function hideLoading() { loadingOverlay.classList.remove('show'); isLoading = false; }
+// ===== Init State =====
+(function reset() {
+  const now = new Date();
+  currentYear = now.getFullYear();
+  currentMonth = now.getMonth() + 1;
+  selectedDate = fmtDate(now);
+  selectedMood = '';
+  currentImageUrl = null;
+  isEditMode = false;
+  checkins = {};
+})();
 
-function showToast(msg, type) {
-  toast.textContent = msg;
-  toast.className = 'toast show ' + (type || 'info');
-  setTimeout(() => { toast.className = 'toast'; }, 2200);
+// ===== Show Toast =====
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show '+(type||'success');
+  setTimeout(() => { if(el.classList.contains('show')) el.className='toast'; }, 1800);
 }
 
 // ===== API =====
-async function fetchCheckins(year, month) {
-  showLoading();
+async function api(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  return res.json();
+}
+
+async function loadCheckins(y, m) {
   try {
-    const res = await fetch('/api/checkins?year=' + year + '&month=' + month);
-    const data = await res.json();
+    const data = await api('GET', '/api/checkins?year='+y+'&month='+m);
     checkins = {};
     data.forEach(c => { checkins[c.date] = c; });
     renderCalendar();
     renderGallery();
-    updateProgress();
-  } catch (e) {
-    console.error('Failed to fetch checkins:', e);
-    showToast('加载数据失败，请检查网络连接', 'error');
-  } finally {
-    hideLoading();
-  }
+  } catch(e) { console.error(e); toast('加载失败','error'); }
 }
 
-async function fetchStats() {
+async function loadStats() {
   try {
-    const res = await fetch('/api/stats');
-    const data = await res.json();
-    streakCount.textContent = data.streak;
-    totalCount.textContent = data.total;
-    monthCount.textContent = data.currentMonth;
-    monthTotalEl.textContent = data.monthTotal;
-
-    totalWords.textContent = data.totalWords || 0;
-
-    // Streak badge
-    updateStreakBadge(data.streak);
-    // Progress bar
-    const pct = data.monthTotal > 0 ? Math.round(data.currentMonth / data.monthTotal * 100) : 0;
-    progressFill.style.width = pct + '%';
-    progressPercent.textContent = data.currentMonth + '/' + data.monthTotal + ' (' + pct + '%)';
-  } catch (e) { console.error(e); }
-}
-
-function updateStreakBadge(streak) {
-  if (streak >= 365) {
-    streakBadge.className = 'streak-badge';
-    streakBadgeText.textContent = '🏆 传奇！连续打卡 ' + streak + ' 天！';
-  } else if (streak >= 100) {
-    streakBadge.className = 'streak-badge';
-    streakBadgeText.textContent = '🌟 百天成就！连续打卡 ' + streak + ' 天！';
-  } else if (streak >= 30) {
-    streakBadge.className = 'streak-badge';
-    streakBadgeText.textContent = '🔥 一个月啦！连续打卡 ' + streak + ' 天！';
-  } else if (streak >= 7) {
-    streakBadge.className = 'streak-badge';
-    streakBadgeText.textContent = '💪 坚持一周！连续打卡 ' + streak + ' 天！';
-  } else if (streak >= 3) {
-    streakBadge.className = 'streak-badge';
-    streakBadgeText.textContent = '✨ 势头不错！连续打卡 ' + streak + ' 天！';
-  } else {
-    streakBadge.className = 'streak-badge hidden';
-  }
-}
-
-function updateProgress() {
-  const now = new Date();
-  const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const monthPrefix = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-  const done = Object.keys(checkins).filter(d => d.startsWith(monthPrefix)).length;
-  const pct = totalDays > 0 ? Math.round(done / totalDays * 100) : 0;
-  progressFill.style.width = pct + '%';
-  progressPercent.textContent = done + '/' + totalDays + ' (' + pct + '%)';
+    const data = await api('GET', '/api/stats');
+    document.getElementById('streakNum').textContent = data.streak;
+    document.getElementById('streakCount').textContent = data.streak;
+    document.getElementById('totalCount').textContent = data.total;
+    document.getElementById('monthDone').textContent = data.currentMonth;
+    document.getElementById('monthTotal').textContent = data.monthTotal;
+    // Highlight streak
+    const sh = document.getElementById('streakHighlight');
+    sh.style.opacity = data.streak >= 3 ? '1' : '0.4';
+  } catch(e) {}
 }
 
 // ===== Calendar =====
 function renderCalendar() {
-  const firstDay = new Date(currentYear, currentMonth - 1, 1);
-  const lastDay = new Date(currentYear, currentMonth, 0);
-  const startDay = firstDay.getDay();
-  const daysInMonth = lastDay.getDate();
-  const daysInPrev = new Date(currentYear, currentMonth - 1, 0).getDate();
-  const todayStr = formatDate(new Date());
+  const fd = new Date(currentYear, currentMonth-1, 1);
+  const ld = new Date(currentYear, currentMonth, 0);
+  const sd = fd.getDay(), dim = ld.getDate();
+  const dps = new Date(currentYear, currentMonth-1, 0).getDate();
+  const today = fmtDate(new Date());
+  const l = document.getElementById('currentMonthLabel');
+  l.textContent = currentYear+'年'+currentMonth+'月';
 
-  monthLabel.textContent = currentYear + '\u5e74' + currentMonth + '\u6708';
-
-  let html = '';
-
-  // Previous month days
-  for (let i = startDay - 1; i >= 0; i--) {
-    const d = daysInPrev - i;
-    const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-    const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-    const dateStr = prevYear + '-' + String(prevMonth).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-    html += '<div class="cal-day other-month" data-date="' + dateStr + '">' + d + '</div>';
+  let h = '';
+  // prev month
+  for(let i=sd-1;i>=0;i--) {
+    const pm = currentMonth===1?12:currentMonth-1, py = currentMonth===1?currentYear-1:currentYear;
+    h += '<div class="cal-day other-month">'+(dps-i)+'</div>';
   }
-
-  // Current month days
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = currentYear + '-' + String(currentMonth).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  // current month
+  for(let d=1;d<=dim;d++) {
+    const ds = currentYear+'-'+String(currentMonth).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     let cls = 'cal-day';
-    if (dateStr === todayStr) cls += ' today';
-    if (checkins[dateStr]) {
-      cls += ' checked';
-      if (checkins[dateStr].image) cls += ' has-image';
+    if(ds===today) cls+=' today';
+    if(checkins[ds]) {
+      cls+=' checked';
+      if(checkins[ds].mood) { cls+=' mood'; }
     }
-    if (dateStr === selectedDate) cls += ' selected';
-    html += '<div class="' + cls + '" data-date="' + dateStr + '">' + d + '</div>';
+    if(ds===selectedDate) cls+=' selected';
+    h += '<div class="'+cls+'" data-date="'+ds+'"'+(checkins[ds]&&checkins[ds].mood?' data-mood="'+checkins[ds].mood+'"':'')+'>'+d+'</div>';
   }
+  // next month
+  const tc = sd+dim, rem = (7-tc%7)%7;
+  for(let d=1;d<=rem;d++) h+='<div class="cal-day other-month">'+d+'</div>';
 
-  // Next month days
-  const totalCells = startDay + daysInMonth;
-  const remaining = (7 - totalCells % 7) % 7;
-  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-  const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-  for (let d = 1; d <= remaining; d++) {
-    const dateStr = nextYear + '-' + String(nextMonth).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-    html += '<div class="cal-day other-month" data-date="' + dateStr + '">' + d + '</div>';
-  }
+  document.getElementById('calendarGrid').innerHTML = h;
 
-  calendarGrid.innerHTML = html;
-
-  calendarGrid.querySelectorAll('.cal-day').forEach(el => {
-    el.addEventListener('click', () => { if (el.dataset.date) selectDate(el.dataset.date); });
+  document.querySelectorAll('.cal-day[data-date]').forEach(el => {
+    el.addEventListener('click', () => selectDate(el.dataset.date));
   });
 }
 
-function selectDate(date) {
-  selectedDate = date;
-  const d = new Date(date);
-  const weekdays = ['\u65e5', '\u4e00', '\u4e8c', '\u4e09', '\u56db', '\u4e94', '\u516d'];
-  const isToday = date === formatDate(new Date());
-  checkinDateEl.textContent = (isToday ? '\u4eca\u5929 ' : '') + date + ' \u661f\u671f' + weekdays[d.getDay()];
+function selectDate(ds) {
+  selectedDate = ds;
+  const d = toDate(ds);
+  const isToday = ds === fmtDate(new Date());
+  document.getElementById('checkinDate').textContent = (isToday?'今天 · ':'')+md(d)+' '+wd(d);
 
-  // Highlight
+  // Calendar highlight
   document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected'));
-  const sel = document.querySelector('.cal-day[data-date="' + date + '"]');
-  if (sel) sel.classList.add('selected');
+  const sel = document.querySelector('.cal-day[data-date="'+ds+'"]');
+  if(sel) sel.classList.add('selected');
 
-  // Update check-in panel
-  const c = checkins[date];
-  if (c) {
-    checkedBadge.style.display = 'inline-flex';
-    notCheckedBadge.style.display = 'none';
-    noteInput.value = c.note || '';
-    wordCount.value = c.words || '';
+  const c = checkins[ds];
+  const dot = document.getElementById('checkinStatusDot');
+  document.getElementById('checkedState').style.display = c?'block':'none';
+  document.getElementById('uncheckedState').style.display = c?'none':'block';
 
-    if (c.image) {
-      existingImage.style.display = 'inline-block';
-      existingImagePreview.src = c.image;
-      uploadPlaceholder.style.display = 'none';
-      uploadPreview.style.display = 'none';
-    } else {
-      existingImage.style.display = 'none';
-      resetUpload();
-    }
-    deleteBtn.style.display = 'block';
-    checkinBtn.textContent = '\u2705 \u66f4\u65b0\u6253\u5361';
+  if(c) {
+    dot.className = 'status-dot checked';
+    document.getElementById('checkedNote').textContent = c.note || '';
+    document.getElementById('checkedImage').src = c.image || '';
+    document.getElementById('checkedImage').style.display = c.image?'block':'none';
+    isEditMode = false;
   } else {
-    checkedBadge.style.display = 'none';
-    notCheckedBadge.style.display = 'inline-flex';
-    noteInput.value = '';
-    wordCount.value = '';
-    existingImage.style.display = 'none';
-    resetUpload();
-    deleteBtn.style.display = 'none';
-    checkinBtn.textContent = '\u2705 \u6253\u5361';
+    dot.className = 'status-dot unchecked';
+    document.getElementById('noteInput').value = '';
+    document.getElementById('uploadEmpty').style.display = 'flex';
+    document.getElementById('uploadFilled').style.display = 'none';
+    currentImageUrl = null;
+    selectedMood = '';
+    isEditMode = false;
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
   }
 }
 
-function resetUpload() {
-  uploadPlaceholder.style.display = 'flex';
-  uploadPreview.style.display = 'none';
-  previewImage.src = '';
-  imageInput.value = '';
-  currentImageDataUrl = null;
-}
+// ===== Edit mode =====
+document.getElementById('editBtn').addEventListener('click', () => {
+  isEditMode = true;
+  const c = checkins[selectedDate];
+  document.getElementById('checkedState').style.display = 'none';
+  document.getElementById('uncheckedState').style.display = 'block';
+  document.getElementById('noteInput').value = c?.note || '';
+  selectedMood = c?.mood || '';
+  document.querySelectorAll('.mood-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.mood === selectedMood);
+  });
+  if(c?.image) {
+    currentImageUrl = c.image;
+    document.getElementById('uploadEmpty').style.display = 'none';
+    document.getElementById('uploadFilled').style.display = 'flex';
+    document.getElementById('previewThumb').src = c.image;
+  }
+  document.getElementById('checkinBtn').textContent = '✏️ 更新打卡';
+});
 
-// ===== Image Upload (with compression) =====
-uploadArea.addEventListener('click', () => imageInput.click());
+// ===== Mood Picker =====
+document.querySelectorAll('.mood-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedMood = btn.dataset.mood;
+  });
+});
 
-function compressImage(file) {
-  return new Promise((resolve) => {
-    const MAX_SIZE = 500 * 1024; // 500KB target
-    if (file.size <= MAX_SIZE) {
-      const reader = new FileReader();
-      reader.onload = ev => resolve(ev.target.result);
-      reader.readAsDataURL(file);
+// ===== Image Upload =====
+const imgInput = document.getElementById('imageInput');
+const uploadArea = document.getElementById('uploadArea');
+const uploadEmpty = document.getElementById('uploadEmpty');
+const uploadFilled = document.getElementById('uploadFilled');
+const previewThumb = document.getElementById('previewThumb');
+
+uploadArea.addEventListener('click', () => imgInput.click());
+
+function compressImg(file) {
+  return new Promise(resolve => {
+    const MAX = 400 * 1024;
+    if(file.size <= MAX) {
+      const r = new FileReader(); r.onload = e => resolve(e.target.result); r.readAsDataURL(file);
       return;
     }
-
-    const reader = new FileReader();
-    reader.onload = ev => {
+    const r = new FileReader();
+    r.onload = e => {
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        const maxDim = 1200;
-        if (width > maxDim || height > maxDim) {
-          const ratio = Math.min(maxDim / width, maxDim / height);
-          width *= ratio; height *= ratio;
-        }
-        canvas.width = width; canvas.height = height;
-        const ctx2 = canvas.getContext('2d');
-        ctx2.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.75));
+        const c = document.createElement('canvas');
+        let w = img.width, h2 = img.height;
+        const maxDim = 1000;
+        if(w>maxDim||h2>maxDim) { const ra=Math.min(maxDim/w,maxDim/h2); w*=ra; h2*=ra; }
+        c.width=w; c.height=h2; c.getContext('2d').drawImage(img,0,0,w,h2);
+        resolve(c.toDataURL('image/jpeg',0.7));
       };
-      img.src = ev.target.result;
+      img.src = e.target.result;
     };
-    reader.readAsDataURL(file);
+    r.readAsDataURL(file);
   });
 }
 
-imageInput.addEventListener('change', async (e) => {
+imgInput.addEventListener('change', async e => {
   const file = e.target.files[0];
-  if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { showToast('图片超过 10MB 限制', 'error'); return; }
-  showToast('正在处理图片...', 'info');
+  if(!file) return;
+  if(file.size>10*1024*1024) { toast('图片太大','error'); return; }
   try {
-    const dataUrl = await compressImage(file);
-    uploadPlaceholder.style.display = 'none';
-    uploadPreview.style.display = 'block';
-    previewImage.src = dataUrl;
-    existingImage.style.display = 'none';
-    currentImageDataUrl = dataUrl;
-    showToast('图片已加载 ✓', 'success');
-  } catch (e) {
-    showToast('图片处理失败', 'error');
-  }
+    const url = await compressImg(file);
+    uploadEmpty.style.display='none'; uploadFilled.style.display='flex';
+    previewThumb.src=url; currentImageUrl=url;
+  } catch(ex) { toast('图片处理失败','error'); }
 });
 
-removeImageBtn.addEventListener('click', (e) => { e.stopPropagation(); resetUpload(); });
-existingImageRemove.addEventListener('click', (e) => {
+document.getElementById('removeImage').addEventListener('click', e => {
   e.stopPropagation();
-  existingImage.style.display = 'none';
-  // Also clear current image data if we had one loaded
-});
-
-// ===== Drag & Drop =====
-uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-uploadArea.addEventListener('drop', async (e) => {
-  e.preventDefault();
-  uploadArea.classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
-  if (!file || !file.type.startsWith('image/')) {
-    showToast('请拖入图片文件', 'error'); return;
-  }
-  if (file.size > 10 * 1024 * 1024) { showToast('图片超过 10MB 限制', 'error'); return; }
-  showToast('正在处理图片...', 'info');
-  try {
-    const dataUrl = await compressImage(file);
-    uploadPlaceholder.style.display = 'none';
-    uploadPreview.style.display = 'block';
-    previewImage.src = dataUrl;
-    existingImage.style.display = 'none';
-    currentImageDataUrl = dataUrl;
-    showToast('图片已加载 ✓', 'success');
-  } catch (e) { showToast('图片处理失败', 'error'); }
+  uploadEmpty.style.display='flex'; uploadFilled.style.display='none';
+  previewThumb.src=''; currentImageUrl=null; imgInput.value='';
 });
 
 // ===== Check-in =====
-checkinBtn.addEventListener('click', doCheckin);
+document.getElementById('checkinBtn').addEventListener('click', async () => {
+  const note = document.getElementById('noteInput').value.trim();
+  const body = { date: selectedDate, note, mood: selectedMood };
 
-// Keyboard shortcut: Enter to check in
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.target.closest('input, textarea, select')) {
-    e.preventDefault();
-    doCheckin();
-  }
-});
-
-async function doCheckin() {
-  if (isLoading) return;
-  const words = parseInt(wordCount.value) || 0;
-  const note = noteInput.value.trim();
-  const body = { date: selectedDate, note, words };
-
-  // Determine image source
-  if (currentImageDataUrl) {
-    body.image = currentImageDataUrl;
-  } else if (existingImage.style.display !== 'none') {
-    body.image = existingImagePreview.src;
+  if(currentImageUrl && currentImageUrl.startsWith('data:')) {
+    body.image = currentImageUrl;
+  } else if(currentImageUrl) {
+    body.image = currentImageUrl;
+  } else {
+    body.image = '';
   }
 
-  checkinBtn.disabled = true;
-  showLoading();
-  checkinBtn.textContent = '\u5904\u7406\u4e2d...';
+  const btn = document.getElementById('checkinBtn');
+  btn.disabled = true; btn.textContent = '处理中...';
+
   try {
-    const res = await fetch('/api/checkin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const result = await res.json();
-    if (result.success) {
-      checkins[selectedDate] = result.data;
-      showToast('\u6253\u5361\u6210\u529f! \u52a0\u6cb9! \ud83c\udf89', 'success');
+    const res = await api('POST', '/api/checkin', body);
+    if(res.success) {
+      checkins[selectedDate] = res.data;
+      toast('打卡成功！🌸','success');
       spawnConfetti();
       selectDate(selectedDate);
       renderCalendar();
-      fetchStats();
+      loadStats();
       renderGallery();
+      isEditMode = false;
+      btn.textContent = '✅ 打卡签到';
+      // Reset form
+      document.getElementById('noteInput').value = '';
+      selectedMood = '';
+      currentImageUrl = null;
+      uploadEmpty.style.display='flex'; uploadFilled.style.display='none';
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
     } else {
-      showToast(result.error || '\u6253\u5361\u5931\u8d25', 'error');
+      toast(res.error||'打卡失败','error');
     }
-  } catch (e) {
-    showToast('\u7f51\u7edc\u9519\u8bef: ' + e.message, 'error');
-  }
-  checkinBtn.disabled = false;
-  checkinBtn.textContent = checkins[selectedDate] ? '\u2705 \u66f4\u65b0\u6253\u5361' : '\u2705 \u6253\u5361';
-  hideLoading();
-}
+  } catch(ex) { toast('网络错误','error'); }
+  btn.disabled = false;
+});
 
 // ===== Delete =====
-deleteBtn.addEventListener('click', async () => {
-  if (!confirm('\u786e\u5b9a\u5220\u9664 ' + selectedDate + ' \u7684\u6253\u5361\u8bb0\u5f55\u5417\uff1f\u6b64\u64cd\u4f5c\u4e0d\u53ef\u6062\u590d\u3002')) return;
-  showLoading();
+document.getElementById('deleteBtn2').addEventListener('click', async () => {
+  if(!confirm('确定删除 '+selectedDate+' 的打卡记录吗？')) return;
   try {
-    const res = await fetch('/api/checkin/' + selectedDate, { method: 'DELETE' });
-    if (res.ok) {
+    const res = await fetch('/api/checkin/'+selectedDate, { method: 'DELETE' });
+    if(res.ok) {
       delete checkins[selectedDate];
-      showToast('\u5df2\u5220\u9664', 'info');
+      toast('已删除','');
       selectDate(selectedDate);
       renderCalendar();
-      fetchStats();
+      loadStats();
       renderGallery();
     }
-  } catch (e) { showToast('\u5220\u9664\u5931\u8d25', 'error'); }
-  hideLoading();
+  } catch(e) { toast('删除失败','error'); }
 });
 
 // ===== Gallery =====
 function renderGallery() {
-  const images = Object.values(checkins).filter(c => c.image).sort((a, b) => b.date.localeCompare(a.date));
-  if (images.length === 0) {
-    galleryGrid.innerHTML = '<div class="gallery-empty"><span class="empty-icon">\ud83d\udcf7</span>\u8fd8\u6ca1\u6709\u4e0a\u4f20\u622a\u56fe<br>\u52a0\u6cb9\u5f00\u59cb\u6253\u5361\u5427!</div>';
-    return;
+  const items = Object.values(checkins).filter(c => c.image).sort((a,b)=>b.date.localeCompare(a.date));
+  const grid = document.getElementById('galleryGrid');
+  if(!items.length) {
+    grid.innerHTML = '<div class="gallery-empty">还没有图片记录<br>开始打卡吧～</div>'; return;
   }
-  galleryGrid.innerHTML = images.map(c =>
-    '<div class="gallery-item" data-image="' + c.image + '"><img src="' + c.image + '" loading="lazy" alt="' + c.date + '"><div class="gallery-date">' + c.date + (c.words ? ' \ud83d\udcd6' + c.words + '\u8bcd' : '') + '</div></div>'
+  grid.innerHTML = items.map(c =>
+    '<div class="gallery-item" data-img="'+c.image+'"><img src="'+c.image+'" loading="lazy"><div class="gallery-meta"><span class="gallery-date">'+c.date+'</span>'+(c.mood?'<span class="gallery-mood">'+c.mood+'</span>':'')+'</div></div>'
   ).join('');
-
-  galleryGrid.querySelectorAll('.gallery-item').forEach(el => {
-    el.addEventListener('click', () => showLightbox(el.dataset.image));
+  grid.querySelectorAll('.gallery-item').forEach(el => {
+    el.addEventListener('click', () => showLightbox(el.dataset.img));
   });
 }
 
 // ===== Lightbox =====
-let lightbox = null;
+const lb = document.getElementById('lightbox'), lbImg = document.getElementById('lightboxImg');
 function showLightbox(src) {
-  if (!lightbox) {
-    lightbox = document.createElement('div');
-    lightbox.className = 'lightbox';
-    lightbox.innerHTML = '<span class="lb-close">\u2715</span><img>';
-    document.body.appendChild(lightbox);
-    lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox || e.target.classList.contains('lb-close')) {
-        lightbox.classList.remove('active');
-      }
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && lightbox.classList.contains('active')) {
-        lightbox.classList.remove('active');
-      }
-    });
-  }
-  lightbox.querySelector('img').src = src;
-  lightbox.classList.add('active');
+  lbImg.src = src; lb.classList.add('active');
 }
+document.getElementById('lbClose').addEventListener('click', () => lb.classList.remove('active'));
+lb.addEventListener('click', e => { if(e.target===lb) lb.classList.remove('active'); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') lb.classList.remove('active'); });
 
 // ===== Confetti =====
-let confettiPieces = [];
-let confettiAnimId = null;
-
+const confCv = document.getElementById('confettiCanvas'), cCtx = confCv.getContext('2d');
+let cPieces=[], cId=null;
 function spawnConfetti() {
-  const W = confettiCanvas.width = window.innerWidth;
-  const H = confettiCanvas.height = window.innerHeight;
-  confettiPieces = [];
-
-  const colors = ['#667eea', '#764ba2', '#48bb78', '#fbbf24', '#fc8181', '#f687b3', '#63b3ed', '#f6ad55'];
-  for (let i = 0; i < 80; i++) {
-    confettiPieces.push({
-      x: Math.random() * W,
-      y: -20 - Math.random() * H * 0.5,
-      w: Math.random() * 8 + 4,
-      h: Math.random() * 12 + 6,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      vx: (Math.random() - 0.5) * 4,
-      vy: Math.random() * 2 + 1.5,
-      rotation: Math.random() * 360,
-      rv: (Math.random() - 0.5) * 10,
-      opacity: 1,
-      decay: 0.003 + Math.random() * 0.004
-    });
-  }
-
-  if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
-  let frame = 0;
-
-  function animate() {
-    frame++;
-    if (frame > 200) { ctx.clearRect(0, 0, W, H); confettiAnimId = null; return; }
-    ctx.clearRect(0, 0, W, H);
-    for (const p of confettiPieces) {
-      p.x += p.vx;
-      p.vy += 0.08;
-      p.y += p.vy;
-      p.vx *= 0.995;
-      p.rotation += p.rv;
-      p.opacity -= p.decay;
-      if (p.opacity > 0) {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.opacity);
-        ctx.fillStyle = p.color;
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation * Math.PI / 180);
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-        ctx.restore();
-      }
+  const W=confCv.width=window.innerWidth, H=confCv.height=window.innerHeight;
+  const cols=['#ff6b9d','#ff8eb3','#ff4081','#ffb347','#66bb6a','#81d4fa','#ce93d8'];
+  cPieces=[]; for(let i=0;i<60;i++) cPieces.push({
+    x:Math.random()*W,y:-20-Math.random()*H*.3,w:Math.random()*6+3,h:Math.random()*10+4,
+    color:cols[Math.floor(Math.random()*cols.length)],
+    vx:(Math.random()-.5)*3,vy:Math.random()*2+1,rot:Math.random()*360,rv:(Math.random()-.5)*8,op:1,dc:.005+Math.random()*.005
+  });
+  if(cId) cancelAnimationFrame(cId);
+  let f=0;
+  (function anim(){
+    f++; if(f>180){cCtx.clearRect(0,0,W,H);cId=null;return;}
+    cCtx.clearRect(0,0,W,H);
+    for(const p of cPieces){
+      p.x+=p.vx;p.vy+=.06;p.y+=p.vy;p.vx*=.995;p.rot+=p.rv;p.op-=p.dc;
+      if(p.op>0){cCtx.save();cCtx.globalAlpha=Math.max(0,p.op);cCtx.fillStyle=p.color;
+      cCtx.translate(p.x,p.y);cCtx.rotate(p.rot*Math.PI/180);cCtx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cCtx.restore();}
     }
-    confettiAnimId = requestAnimationFrame(animate);
-  }
-  animate();
+    cId=requestAnimationFrame(anim);
+  })();
 }
 
 // ===== Navigation =====
-$('prevMonth').addEventListener('click', () => {
-  currentMonth--;
-  if (currentMonth === 0) { currentMonth = 12; currentYear--; }
-  loadMonth();
+document.getElementById('prevMonth').addEventListener('click',()=>{
+  currentMonth--; if(currentMonth===0){currentMonth=12;currentYear--;} loadCheckins(currentYear,currentMonth);
 });
-$('nextMonth').addEventListener('click', () => {
-  currentMonth++;
-  if (currentMonth === 13) { currentMonth = 1; currentYear++; }
-  loadMonth();
+document.getElementById('nextMonth').addEventListener('click',()=>{
+  currentMonth++; if(currentMonth===13){currentMonth=1;currentYear++;} loadCheckins(currentYear,currentMonth);
 });
-$('goToday').addEventListener('click', goToday);
 
-function goToday() {
-  const today = new Date();
-  currentYear = today.getFullYear();
-  currentMonth = today.getMonth() + 1;
-  loadMonth().then(() => selectDate(formatDate(today)));
-}
-
-function loadMonth() {
-  return fetchCheckins(currentYear, currentMonth);
-}
+// ===== Block body scroll when touching panel (prevent bounce) =====
+document.getElementById('checkinPanel').addEventListener('touchmove', e => e.stopPropagation());
 
 // ===== Init =====
-async function init() {
-  await fetchCheckins(currentYear, currentMonth);
-  await fetchStats();
-  selectDate(formatDate(new Date()));
-}
-
-init();
+(async function init(){
+  await loadCheckins(currentYear, currentMonth);
+  loadStats();
+  selectDate(fmtDate(new Date()));
+})();

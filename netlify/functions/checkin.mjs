@@ -5,7 +5,7 @@ export default async (req, context) => {
     });
   }
   try {
-    const { date, note, image, words } = await req.json();
+    const { date, note, image, mood } = await req.json();
     if (!date) {
       return new Response(JSON.stringify({ error: "日期不能为空" }), {
         status: 400, headers: { "Content-Type": "application/json" }
@@ -17,7 +17,6 @@ export default async (req, context) => {
 
     let imageUrl = "";
 
-    // New image upload (base64)
     if (image && image.startsWith("data:")) {
       const base64Data = image.split(",")[1];
       const mimeType = image.split(";")[0].split(":")[1];
@@ -27,27 +26,26 @@ export default async (req, context) => {
       await store.set(imageKey, buffer, { metadata: { contentType: mimeType } });
       imageUrl = "/api/image/" + imageKey;
 
-      // Delete old image if it exists
-      const checkinKey = "checkin:" + date;
-      const existing = await store.get(checkinKey, { type: "json" });
+      // Delete old image
+      const ck = "checkin:" + date;
+      const existing = await store.get(ck, { type: "json" });
       if (existing?.image && existing.image.includes("/api/image/")) {
         const oldKey = existing.image.replace("/api/image/", "");
         try { await store.delete(oldKey); } catch {}
       }
     } else if (image) {
-      // Keep existing URL
       imageUrl = image;
     }
 
-    const checkinKey = "checkin:" + date;
+    const ck = "checkin:" + date;
     const data = {
       date,
       note: note || "",
-      words: parseInt(words) || 0,
+      mood: mood || "",
       image: imageUrl,
       updatedAt: new Date().toISOString()
     };
-    await store.setJSON(checkinKey, data);
+    await store.setJSON(ck, data);
 
     return new Response(JSON.stringify({ success: true, data }), {
       headers: { "Content-Type": "application/json" }

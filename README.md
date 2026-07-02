@@ -1,8 +1,8 @@
 # 🌸 菲菲打卡日记
 
-菲菲的每日打卡日记 - 记录每一天，上传照片留纪念。
+> 🌐 **[feifeidaka.netlify.app](https://feifeidaka.netlify.app)**
 
-部署在 Netlify，手机端优化，随时打开打卡。
+菲菲的每日打卡日记 - 记录每一天，上传照片留纪念。手机端优化，随时打开打卡。
 
 ## ✨ 功能
 
@@ -18,4 +18,4 @@
 
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/gg239629/word-checkin)
 
-部署后记得在 Netlify Dashboard → Storage 中启用 **Netlify Blobs**。
+部署后在 Netlify Dashboard → Storage 中启用 **Netlify Blobs**。

@@ -32,8 +32,7 @@ async function api(method,url,body){
 // ============================================================
 const PASSWORDS = { loveguan: 'admin', lovefei: 'user' };
 const passInput = $('passInput');
-const passDots = $('passDots');
-const loginHint = $('loginHint');
+const loginBtn = $('loginBtn');
 const loginError = $('loginError');
 const loginCard = $('loginCard');
 const loginView = $('loginView');
@@ -60,20 +59,14 @@ setTimeout(()=>passInput.focus(),500);
 
 // Update dots as user types
 passInput.addEventListener('input',()=>{
-  const v=passInput.value;
-  const dots=passDots.querySelectorAll('.dot');
-  dots.forEach((d,i)=>{
-    d.classList.toggle('filled',i<v.length);
-    d.classList.remove('wrong');
-  });
   loginError.textContent='';
-  loginHint.textContent='';
+  loginError.style.color='';
 });
 
 // Handle Enter key
-passInput.addEventListener('keydown',e=>{
-  if(e.key==='Enter') tryLogin();
-});
+passInput.addEventListener('keydown',e=>{ if(e.key==='Enter') tryLogin(); });
+// Login button
+loginBtn.addEventListener('click',tryLogin);
 
 // Re-focus on any touch/click
 loginView.addEventListener('click',(e)=>{

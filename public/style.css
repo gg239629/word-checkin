@@ -52,16 +52,11 @@ body{
 .login-title{font-size:22px;font-weight:800;color:var(--pink);margin-bottom:4px;letter-spacing:2px}
 .login-subtitle{font-size:13px;color:var(--text-light);margin-bottom:20px}
 
-.pass-input{
-  width:100%;padding:14px 16px;border:2px solid #f0e0e8;border-radius:14px;
-  background:white;font-size:16px;text-align:center;outline:none;
-  letter-spacing:6px;color:var(--text);margin-bottom:12px;
-  transition:border-color 0.3s;box-sizing:border-box;
-}
+.pass-input{width:100%;padding:14px 16px;border:2px solid #f0e0e8;border-radius:14px;background:white;font-size:16px;text-align:center;outline:none;letter-spacing:6px;color:var(--text);margin-bottom:12px;box-sizing:border-box;transition:border-color 0.3s}.pass-input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,107,157,0.08)}.pass-input::placeholder{color:#d0c8cc;letter-spacing:1px;font-size:14px}
 .pass-input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,107,157,0.08)}
 .pass-input::placeholder{color:#d0c8cc;letter-spacing:1px;font-size:14px}
 
-.login-error{font-size:13px;color:var(--red);min-height:20px;font-weight:500;margin-bottom:6px}
+.login-error{font-size:13px;color:var(--red);min-height:20px;font-weight:500;margin-bottom:6px}.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,var(--pink),#ff4081);color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:4px;box-shadow:0 4px 16px rgba(255,107,157,0.25);transition:all 0.2s}.btn-login:active{transform:scale(0.97)}
 .btn-login{
   width:100%;padding:14px;background:linear-gradient(135deg,var(--pink),#ff4081);
   color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;

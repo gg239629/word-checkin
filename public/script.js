@@ -103,22 +103,31 @@ function selectDate(ds) {
 
   var c = checks[ds];
   var dot = $('checkinStatusDot');
+
   if (c) {
+    // Show checked state, hide form
+    $('checkedState').style.display = 'block';
+    $('uncheckedState').style.display = 'none';
+    $('checkinBtn').textContent = '✅ 打卡签到'; // reset for next time
     dot.className = 'status-dot checked';
+    $('checkedNote').textContent = c.note || '';
+    if (c.image) {
+      $('checkedImage').style.display = 'block';
+      $('checkedImage').src = c.image;
+    } else {
+      $('checkedImage').style.display = 'none';
+    }
     $('noteInput').value = c.note || '';
     selMood = c.mood || '';
-    if (c.image) {
-      $('uploadEmpty').style.display = 'none';
-      $('uploadFilled').style.display = 'block';
-      $('previewThumb').src = c.image;
-      curImg = c.image;
-    } else {
-      resetUpload();
-    }
+    curImg = c.image || null;
   } else {
+    // Show form, hide checked state
+    $('checkedState').style.display = 'none';
+    $('uncheckedState').style.display = 'block';
     dot.className = 'status-dot unchecked';
     $('noteInput').value = '';
     selMood = '';
+    curImg = null;
     resetUpload();
   }
 
@@ -233,6 +242,7 @@ $('checkinBtn').addEventListener('click', async function() {
   } catch (ex) {
     toast('网络错误，请重试', 'error');
   }
+  isEditing = false;
   btn.disabled = false;
   btn.textContent = '✅ 打卡签到';
 });
@@ -333,3 +343,44 @@ $('nextMonth').addEventListener('click', function() {
 loadChecks(curY, curM);
 loadStats();
 selectDate(fmt(new Date()));
+
+// Edit button - switch to edit mode
+var isEditing = false;
+$('editBtn').addEventListener('click', function() {
+  isEditing = true;
+  var c = checks[selDate];
+  $('checkedState').style.display = 'none';
+  $('uncheckedState').style.display = 'block';
+  $('checkinBtn').textContent = '✏️ 更新打卡';
+  $('noteInput').value = c.note || '';
+  selMood = c.mood || '';
+  if (c.image) {
+    curImg = c.image;
+    $('uploadEmpty').style.display = 'none';
+    $('uploadFilled').style.display = 'block';
+    $('previewThumb').src = c.image;
+  }
+  var btns = document.querySelectorAll('.mood-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', btns[i].dataset.mood === selMood);
+  }
+});
+
+// Delete button
+$('deleteBtn').addEventListener('click', function() {
+  if (!confirm('确定删除 ' + selDate + ' 的打卡记录吗？')) return;
+  fetch('/api/checkin/' + selDate, { method: 'DELETE' }).then(function(res) {
+    if (res.ok) {
+      delete checks[selDate];
+      toast('已删除');
+      selectDate(selDate);
+      renderCal();
+      loadStats();
+      renderGal();
+    }
+  }).catch(function() { toast('删除失败', 'error'); });
+});
+
+// Reset edit mode after successful check-in (in the checkinBtn handler)
+// Make showLb global
+window.showLb = showLb;

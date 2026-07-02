@@ -45,31 +45,50 @@
       <h4 id="checkinDate">今天</h4>
       <span id="checkinStatusDot" class="status-dot unchecked"></span>
     </div>
-    <div class="mood-picker" id="moodPicker">
-      <label>今天的心情</label>
-      <div class="mood-options">
-        <button class="mood-btn" data-mood="😊">😊</button>
-        <button class="mood-btn" data-mood="😴">😴</button>
-        <button class="mood-btn" data-mood="💪">💪</button>
-        <button class="mood-btn" data-mood="😢">😢</button>
-        <button class="mood-btn" data-mood="🤩">🤩</button>
-        <button class="mood-btn" data-mood="😤">😤</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <input type="text" id="noteInput" placeholder="写一句话记录今天…" maxlength="140">
-    </div>
-    <div class="form-group">
-      <div class="upload-area" id="uploadArea">
-        <input type="file" id="imageInput" accept="image/*" capture="environment" hidden>
-        <div id="uploadEmpty"><span>📷 拍照 / 上传图片</span></div>
-        <div id="uploadFilled" style="display:none">
-          <img id="previewThumb" alt="">
-          <button id="removeImage" class="thumb-remove">✕</button>
+
+    <!-- Already checked -->
+    <div id="checkedState" style="display:none">
+      <div class="checked-preview">
+        <img id="checkedImage" alt="" style="display:none" onclick="showLb(this.src)">
+        <div class="checked-info">
+          <span class="checked-emoji">✅ 已打卡</span>
+          <span id="checkedNote" class="checked-note-text"></span>
         </div>
       </div>
+      <div class="panel-actions">
+        <button id="editBtn" class="btn-outline">✏️ 修改</button>
+        <button id="deleteBtn" class="btn-outline btn-outline-danger">🗑️ 删除</button>
+      </div>
     </div>
-    <button id="checkinBtn" class="btn-primary">✅ 打卡签到</button>
+
+    <!-- Not checked yet -->
+    <div id="uncheckedState">
+      <div class="mood-picker">
+        <label>今天的心情</label>
+        <div class="mood-options">
+          <button class="mood-btn" data-mood="😊">😊</button>
+          <button class="mood-btn" data-mood="😴">😴</button>
+          <button class="mood-btn" data-mood="💪">💪</button>
+          <button class="mood-btn" data-mood="😢">😢</button>
+          <button class="mood-btn" data-mood="🤩">🤩</button>
+          <button class="mood-btn" data-mood="😤">😤</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <input type="text" id="noteInput" placeholder="写一句话记录今天…" maxlength="140">
+      </div>
+      <div class="form-group">
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="imageInput" accept="image/*" capture="environment" hidden>
+          <div id="uploadEmpty"><span>📷 拍照 / 上传图片</span></div>
+          <div id="uploadFilled" style="display:none">
+            <img id="previewThumb" alt="">
+            <button id="removeImage" class="thumb-remove">✕</button>
+          </div>
+        </div>
+      </div>
+      <button id="checkinBtn" class="btn-primary">✅ 打卡签到</button>
+    </div>
   </div>
 </div>
 

@@ -98,28 +98,24 @@ function tryLogin(){
 
 function loginFail(){
   loginLocked=true;
-  const dots=passDots.querySelectorAll('.dot');
-  dots.forEach(d=>d.classList.add('wrong'));
   loginCard.classList.add('shake');
   loginError.textContent='🔒 魔法钥匙不正确，请重试';
-  loginHint.textContent='';
-
+  passInput.style.borderColor='var(--red)';
   setTimeout(()=>{
     passInput.value='';
-    dots.forEach(d=>{d.classList.remove('filled','wrong')});
     loginCard.classList.remove('shake');
     loginError.textContent='';
+    passInput.style.borderColor='#f0e0e8';
     loginLocked=false;
-    passInput.focus();
+    try { passInput.focus(); } catch(e) {}
   },800);
 }
 
 function loginSuccess(){
   loginLocked=true;
-  loginHint.textContent=userRole==='admin'?'✨ 管理员，欢迎回来！':'💖 菲菲，今天也要开心哦！';
-  loginHint.style.color='var(--green)';
-  const dots=passDots.querySelectorAll('.dot');
-  dots.forEach(d=>{d.classList.add('filled');d.style.background='var(--green)'});
+  passInput.style.borderColor='var(--green)';
+  loginError.textContent=userRole==='admin'?'✨ 管理员，欢迎回来！':'💖 菲菲，今天也要开心哦！';
+  loginError.style.color='var(--green)';
 
   // Save to session
   sessionStorage.setItem('ff_role',userRole);

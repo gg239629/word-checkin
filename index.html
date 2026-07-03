@@ -1,0 +1,272 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>重案调查局 · 案件管理系统</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 系统启动画面 -->
+<div id="screen-boot" class="screen active">
+  <div class="boot-container">
+    <div class="boot-badge">重案调查局</div>
+    <div class="boot-line">案件管理系统 v3.7.1</div>
+    <div class="boot-line dim">正在初始化安全连接...</div>
+    <div class="boot-line dim">身份验证模块加载完成</div>
+    <div class="boot-line dim">证据数据库在线</div>
+    <div class="boot-line dim">监控系统已连接</div>
+    <div class="boot-line highlight">系统就绪 · 请输入调查员编号</div>
+    <input type="text" id="login-input" class="boot-input" placeholder="调查员编号" autofocus>
+    <button id="login-btn" class="boot-btn">进入系统</button>
+    <div class="boot-hint">编号格式：DET-XXXX (任意输入即可进入)</div>
+  </div>
+</div>
+
+<!-- 案件大厅 -->
+<div id="screen-dashboard" class="screen">
+  <header class="sys-header">
+    <div class="sys-logo">重案调查局 · 案件管理系统</div>
+    <div class="sys-info">
+      <span id="detective-id">调查员：DET-0000</span>
+      <span id="detective-rank">职级：见习调查员</span>
+      <span id="sys-clock">--:--</span>
+    </div>
+  </header>
+  <div class="main-layout">
+    <nav class="sidebar">
+      <ul>
+        <li class="nav-item active" data-nav="cases">📁 案件列表</li>
+        <li class="nav-item locked" data-nav="suspects-nav">👤 嫌疑人</li>
+        <li class="nav-item locked" data-nav="evidence-nav">📷 证据库</li>
+        <li class="nav-item locked" data-nav="dna-nav">🧬 DNA实验室</li>
+        <li class="nav-item locked" data-nav="surveillance-nav">📍 监控中心</li>
+        <li class="nav-item locked" data-nav="phone-nav">📞 通话记录</li>
+        <li class="nav-item locked" data-nav="news-nav">📰 新闻简报</li>
+        <li class="nav-item locked" data-nav="closed-nav">📂 已结案</li>
+        <li class="nav-item locked" data-nav="classified-nav">⚠ 保密档案</li>
+      </ul>
+    </nav>
+    <main class="content" id="main-content">
+      <!-- 案件大厅视图 -->
+      <div id="view-dashboard" class="view active">
+        <div class="case-card-header">
+          <h2>📋 待调查案件</h2>
+          <span class="badge-new">新案件</span>
+        </div>
+        <div class="case-card">
+          <div class="case-id">CASE-2026-0714</div>
+          <div class="case-details">
+            <div class="detail-row"><span class="label">受害人</span><span class="value">林雨晴</span></div>
+            <div class="detail-row"><span class="label">性别</span><span class="value">女 · 28岁</span></div>
+            <div class="detail-row"><span class="label">死亡时间</span><span class="value">2026年7月14日 22:40</span></div>
+            <div class="detail-row"><span class="label">案发地点</span><span class="value">青禾公寓 3栋 1204室</span></div>
+            <div class="detail-row"><span class="label">案件状态</span><span class="value status-active">● 调查中</span></div>
+            <div class="detail-row"><span class="label">负责调查员</span><span class="value" id="assigned-detective">--</span></div>
+          </div>
+          <button class="btn-primary" id="btn-start-investigation">▶ 开始调查</button>
+        </div>
+        <div class="case-card-header" style="margin-top:30px;">
+          <h2>📂 已结案件</h2>
+        </div>
+        <div class="case-card disabled">
+          <div class="case-id">暂无已结案件</div>
+          <div class="case-details"><p style="color:#555;">完成当前调查后解锁</p></div>
+        </div>
+      </div>
+
+      <!-- 案发现场 -->
+      <div id="view-crimescene" class="view">
+        <h2>🏠 案发现场 · 青禾公寓 1204室</h2>
+        <p class="scene-desc">点击各区域进行现场勘查。每个区域可能包含关键证据。</p>
+        <div class="floor-plan">
+          <div class="room" data-room="living" id="room-living">
+            <span class="room-icon">🛋</span>客厅
+            <div class="room-status" id="status-living">未勘查</div>
+          </div>
+          <div class="room" data-room="kitchen" id="room-kitchen">
+            <span class="room-icon">🍳</span>厨房
+            <div class="room-status" id="status-kitchen">未勘查</div>
+          </div>
+          <div class="room" data-room="bedroom" id="room-bedroom">
+            <span class="room-icon">🛏</span>卧室
+            <div class="room-status" id="status-bedroom">未勘查</div>
+          </div>
+          <div class="room" data-room="balcony" id="room-balcony">
+            <span class="room-icon">🌿</span>阳台
+            <div class="room-status" id="status-balcony">未勘查</div>
+          </div>
+          <div class="room" data-room="bathroom" id="room-bathroom">
+            <span class="room-icon">🚿</span>卫生间
+            <div class="room-status" id="status-bathroom">未勘查</div>
+          </div>
+        </div>
+        <div id="scene-detail" class="scene-detail hidden">
+          <h3 id="scene-room-name"></h3>
+          <p id="scene-room-desc"></p>
+          <button class="btn-secondary" id="btn-collect-evidence">采集证据</button>
+        </div>
+        <button class="btn-primary" id="btn-to-evidence" style="display:none;">进入证据中心 →</button>
+      </div>
+
+      <!-- 证据中心 -->
+      <div id="view-evidence" class="view">
+        <h2>📷 证据库</h2>
+        <div class="evidence-grid" id="evidence-grid"></div>
+        <div id="evidence-detail" class="evidence-detail hidden">
+          <h3 id="ev-name"></h3>
+          <p id="ev-desc"></p>
+          <div id="ev-actions"></div>
+        </div>
+        <button class="btn-primary" id="btn-to-autopsy" style="display:none;">查看尸检报告 →</button>
+      </div>
+
+      <!-- 尸检报告 -->
+      <div id="view-autopsy" class="view">
+        <h2>🧬 法医鉴定报告</h2>
+        <div class="report-doc">
+          <div class="report-header">
+            <div>案件编号：CASE-2026-0714</div>
+            <div>鉴定机构：市法医鉴定中心</div>
+            <div>报告日期：2026年7月15日</div>
+          </div>
+          <div class="report-body">
+            <h3>一、基本信息</h3>
+            <p>死者姓名：林雨晴，女性，28岁</p>
+            <p>身高：165cm，体重：52kg</p>
+            <p>发现地点：青禾公寓3栋1204室卧室</p>
+            
+            <h3>二、尸表检验</h3>
+            <p>体表无明显外伤，颈部无扼痕。左手前臂有一处浅表划伤，非致命伤。</p>
+            <p>口唇发绀，指甲床呈青紫色，符合窒息体征。</p>
+            
+            <h3>三、内检发现</h3>
+            <p class="highlight-text">胃内容物检测呈阳性反应——检出河豚毒素（Tetrodotoxin）。</p>
+            <p>毒素浓度：足以致死剂量。</p>
+            <p>毒物进入途径：口服。</p>
+            
+            <h3>四、死亡原因</h3>
+            <p class="conclusion">直接死因：河豚毒素中毒导致呼吸肌麻痹。</p>
+            <p>死亡方式：他杀。</p>
+            
+            <h3>五、死亡时间推定</h3>
+            <p>推定死亡时间：2026年7月14日 22:00 - 23:00</p>
+            <p>精确推定：22:40左右</p>
+          </div>
+        </div>
+        <button class="btn-primary" id="btn-to-surveillance">进入监控中心 →</button>
+      </div>
+
+      <!-- 监控中心 -->
+      <div id="view-surveillance" class="view">
+        <h2>📍 监控中心</h2>
+        <p>青禾公寓3栋楼道及电梯监控记录</p>
+        <div class="surveillance-timeline">
+          <div class="surv-item" data-time="21:40">
+            <span class="surv-time">21:40</span>
+            <span class="surv-desc">有人进入1204室</span>
+            <button class="btn-small btn-play" data-surv="1">▶ 播放</button>
+          </div>
+          <div class="surv-item" data-time="22:10">
+            <span class="surv-time">22:10</span>
+            <span class="surv-desc">电梯有人下楼</span>
+            <button class="btn-small btn-play" data-surv="2">▶ 播放</button>
+          </div>
+          <div class="surv-item" data-time="22:38">
+            <span class="surv-time">22:38</span>
+            <span class="surv-desc">楼道出现人影</span>
+            <button class="btn-small btn-play" data-surv="3">▶ 播放</button>
+          </div>
+          <div class="surv-item" data-time="22:44">
+            <span class="surv-time">22:44</span>
+            <span class="surv-desc">有人匆忙离开</span>
+            <button class="btn-small btn-play" data-surv="4">▶ 播放</button>
+          </div>
+        </div>
+        <div id="surv-player" class="surv-player hidden">
+          <div id="surv-screen"></div>
+          <button class="btn-secondary" id="btn-enhance">🔍 图像增强处理</button>
+          <div id="surv-enhanced" class="hidden"></div>
+        </div>
+        <button class="btn-primary" id="btn-to-suspects" style="display:none;">查看嫌疑人 →</button>
+      </div>
+
+      <!-- 嫌疑人 -->
+      <div id="view-suspects" class="view">
+        <h2>👤 嫌疑人档案</h2>
+        <div class="suspect-list" id="suspect-list"></div>
+        <div id="suspect-detail" class="suspect-detail hidden"></div>
+      </div>
+
+      <!-- 询问室 -->
+      <div id="view-interrogation" class="view">
+        <h2>🔍 询问室</h2>
+        <div id="interrogation-container">
+          <div class="interro-select" id="interro-select"></div>
+          <div id="interro-chat" class="interro-chat hidden"></div>
+          <div id="interro-input-area" class="interro-input-area hidden">
+            <input type="text" id="interro-input" placeholder="输入你的问题...">
+            <button class="btn-primary" id="btn-interro-send">提问</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 时间线 -->
+      <div id="view-timeline" class="view">
+        <h2>⏱ 案件时间线重构</h2>
+        <p>将所有证据拖放到正确的时间位置</p>
+        <div class="timeline-container">
+          <div class="timeline-track" id="timeline-track">
+            <div class="tl-slot" data-hour="20:00">20:00</div>
+            <div class="tl-slot" data-hour="21:00">21:00</div>
+            <div class="tl-slot" data-hour="22:00">22:00</div>
+            <div class="tl-slot" data-hour="23:00">23:00</div>
+          </div>
+          <div class="timeline-evidence" id="timeline-evidence-pool"></div>
+        </div>
+        <div id="timeline-feedback"></div>
+        <button class="btn-primary" id="btn-to-deduction" style="display:none;">进入推理板 →</button>
+      </div>
+
+      <!-- 推理板 -->
+      <div id="view-deduction" class="view">
+        <h2>🕸 推理板</h2>
+        <p>拖动节点建立关联连线，构建完整的证据链</p>
+        <div class="deduction-board" id="deduction-board">
+          <canvas id="deduction-canvas"></canvas>
+        </div>
+        <div id="deduction-feedback"></div>
+        <button class="btn-primary" id="btn-to-arrest" style="display:none;">执行逮捕 →</button>
+      </div>
+
+      <!-- 逮捕 -->
+      <div id="view-arrest" class="view">
+        <h2>🚔 决定逮捕</h2>
+        <p>根据所有调查结果，选择你认为的真凶：</p>
+        <div class="arrest-choices" id="arrest-choices"></div>
+        <div id="arrest-result" class="hidden"></div>
+      </div>
+
+      <!-- 结局 -->
+      <div id="view-ending" class="view">
+        <h2>📋 案件报告</h2>
+        <div id="ending-content"></div>
+        <button class="btn-primary" id="btn-restart">返回案件大厅</button>
+      </div>
+    </main>
+    <!-- 右侧面板 -->
+    <aside class="right-panel" id="right-panel">
+      <h3>📝 调查日志</h3>
+      <div class="log-entries" id="log-entries"></div>
+      <h3 style="margin-top:20px;">📌 证据墙</h3>
+      <div class="evidence-wall" id="evidence-wall"></div>
+    </aside>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/chapters.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

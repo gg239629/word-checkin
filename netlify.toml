@@ -1,7 +1,6 @@
-﻿[build]
+[build]
   publish = "."
 
-# 告知 Netlify 这是纯静态站点，无需构建
 [[redirects]]
   from = "/*"
   to = "/index.html"
